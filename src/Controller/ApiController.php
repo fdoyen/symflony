@@ -98,4 +98,49 @@ class ApiController extends AbstractController
             'user' => $user
         ]);
     }
+
+    /**
+     * @Route("/getuser/{id}", name="get_user")
+     */
+    public function getUser($id, UserRepository $api){
+        $message = null;
+        $user = $api->findOneBy(['id' => $id]);
+        try{
+            if(!$user){
+                throw new \Exception('The match with id '.$id.' does not exists in database');
+            }else{
+            }
+
+            $message = "Match found !";
+            $code = "success";
+        }catch(\Exception $e){
+            $message = $e->getMessage();
+            $code = "danger";
+        }
+
+        // Exemple avec division par zéro d'un nombre
+        // $x = 0;
+        // $message = null;
+        // $result = 10;
+        // try {
+        //     if (!$x) {
+        //         throw new \Exception('Division par zéro.');
+        //     }elseif($x > 9){
+        //         throw new \Exception('Nombre > 9...');
+        //     }
+        //     $result = 10 / $x;
+        // } catch (\Exception $e) {
+        //     // Créer votre objet à insérer en BDD...
+        //     //$object->message = $e->getMessage();
+        //     //$object->persist();
+        //     $message = $e->getMessage();
+        // }
+
+        return $this->render('api/index.html.twig', [
+            'controller_name' => 'ApiController',
+            'message' => $message,
+            'alert' => $code,
+            'user' => $user
+        ]);
+    }
 }
