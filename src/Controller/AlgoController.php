@@ -62,4 +62,45 @@ class AlgoController extends AbstractController
     		return 1;
     	}
     }
+
+    /**
+     * @Route("/algo/binarysearch", name="algo_binarysearch")
+     */
+    public function algoBinarySearch(){
+        $username = 'azerty';
+        $championToFind = "Katarina";
+        $champions = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/champion.json');
+        $championsArray = json_decode($champions, true);
+        $counter = 0;
+        $orderedChampions = [];
+        foreach($championsArray['data'] as $key => $champion){
+            array_push($orderedChampions, $champion);
+        }
+        $this->binary($orderedChampions, $counter, $championToFind);
+        
+    }
+
+    private function binary($orderedChampions, $counter, $championToFind){
+        $counter++;
+        echo $counter."<br />";
+        dump($orderedChampions);
+        $arrayLength = count($orderedChampions);
+        $middle = (int)floor($arrayLength / 2);
+        if(strcmp($championToFind, $orderedChampions[$middle]['name']) === 0){
+            dd($orderedChampions[$middle]);
+        }elseif(strcmp($championToFind, $orderedChampions[$middle]['name']) < 0){
+            // first half
+            $sliced = array_slice($orderedChampions, 0, $middle);
+            $this->binary($sliced, $counter, $championToFind);
+        }elseif(strcmp($championToFind, $orderedChampions[$middle]['name']) > 0){
+            // last half
+            $sliced = array_slice($orderedChampions, $middle, $arrayLength / 2);
+            $this->binary($sliced, $counter, $championToFind);
+        }
+        return $counter;
+    }
 }
+
+
+// Get the middle
+// check if the ID to find is on the first half, or the last half
