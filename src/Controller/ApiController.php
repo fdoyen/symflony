@@ -236,6 +236,25 @@ class ApiController extends AbstractController
             'items' => $items
         ]);
     }
+
+    /**
+     * @Route("/dragon/item/build", name="data_item_build")
+     */
+    public function dataItemBuild($id = 0, UserRepository $api){
+        $result = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/item.json');
+        $json = json_decode($result, true);
+        $itemUsed = $json['data'][4403]; // Stat-Stick of Stoicism
+        $items = [];
+        foreach($itemUsed['from'] as $key => $itemId){ // 'into' => est utilisé pour... 'from' => est construit à partir...
+            array_push($items, [
+                "name" => $json['data'][$itemId]['name'],
+                "description" => $json['data'][$itemId]['plaintext']
+            ]);
+        }
+        return $this->render('dragon/allitems.html.twig', [
+            'items' => $items
+        ]);
+    }
 }
 
 // get gold from the item
