@@ -150,21 +150,63 @@ class ApiController extends AbstractController
         ]);
     }
 
+
+    // 21/09
+    // part 1
+    // 1° Get champion ID from historyMatchList/azerty
+    // 2° Get detail match by ID from historyMatch/{ID DU MATCH}
+    // 3° Loop into "participants" from match details to find the participant with champion ID (1°)
+    // --- for each item into the loop, stock the current participant object into variable
+    // --- when championId match the key championId into the current participant object, break the loop
+    // 4° show dates, victory or not, gameMode & champion name + image
+
+    // part 2
+    // 5° find the champion into the data dragon champion JSON file by championID
+    // --- go to the participantIdentities key from historyMatch API URL to get the participant full identity
+    // 6° show image + summonerName of all 10 participants
+
     /**
-     * @Route("/api/match/{id}", name="api_get_match")
+     * @Route("/api/show/matches", name="api_show_matches")
      */
     public function getMatch($id = 0, UserRepository $api){
-        $result = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/champion.json');
-        dd(json_decode($result));
-        // $result = $api->findOneBy(['id' => $id]);
-        // if(!$result){
-        //     $code = 403;
-        //     $result = $this->errors[$code];
-        // }else{
-        //     $code = 200;
-        // }
-        // $response = array('code' => $code, 'result' => $result);
-        // return new JsonResponse($response, $code);
+        // Version sale / pas optimisée
+        $username = 'azerty';
+        $currentChampion = null;
+        $currentParticipant = null;
+        $champions = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/champion.json');
+        $championsArray = json_decode($champions, true);
+        $url = file_get_contents($this->base_url.$this->region.$this->who.$this->endpoint.$username);
+        $json = json_decode($url, true);
+        $arrayMatches = [];
+        foreach($json['matches'] as $key => $match){
+            $championId = $match['champion'];
+            $url = file_get_contents($this->base_url.$this->region.$this->who."getHistoryMatch/".$match['gameId']);
+            $detailMatch = json_decode($url, true);
+            foreach($detailMatch['participants'] as $key => $participant){
+                if($participant['championId'] === $championId){
+                    $currentParticipant = $participant;
+                    break;
+                }
+            }
+            foreach($championsArray['data'] as $key => $champion){
+                if($championId === (int) $champion['key']){
+                    $currentChampion = $champion;
+                    break;
+                }
+            }
+            array_push($arrayMatches, [
+                    'gameMode' => $detailMatch['gameMode'],
+                    'win' => $currentParticipant['stats']['win'],
+                    'gameCreation' => $detailMatch['gameCreation'],
+                    'gameDuration' => $detailMatch['gameDuration'],
+                    'championName' => $currentChampion['name'],
+                    'championImg' => "https://opgg-static.akamaized.net/images/lol/champion/".$champion['image']['full']
+                ]
+            );
+        }
+        return $this->render('api/historyMatches.html.twig', [
+            'arrayMatches' => $arrayMatches
+        ]);
     }
 
     /**
@@ -292,17 +334,3 @@ arsort 700 550 500
 // Dans le fichier d'items du 1°), récupérer les 3 items les plus cher du jeu (clé "total")
 // 4°) - challengeant
 // Trouver la liste des items qui nécessitent la "long sword" (1036), la clé c'est "into", et les champs a afficher pour chaque item sont : le "name" et le "plaintext"
-
-// 21/09
-// part 1
-// 1° Get champion ID from historyMatchList/azerty
-// 2° Get detail match by ID from historyMatch/{ID DU MATCH}
-// 3° Loop into "participants" from match details to find the participant with champion ID (1°)
-// --- for each item into the loop, stock the current participant object into variable
-// --- when championId match the key championId into the current participant object, break the loop
-// 4° show dates, victory or not, gameMode & champion name + image
-
-// part 2
-// 5° find the champion into the data dragon champion JSON file by championID
-// --- go to the participantIdentities key from historyMatch API URL to get the participant full identity
-// 6° show image + summonerName of all 10 participants
