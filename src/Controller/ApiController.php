@@ -223,7 +223,9 @@ class ApiController extends AbstractController
                     //dump($expensive);
                 }
                 unset($tempitems[$cheapiestKey]); // On dégage le cheapiest
-                array_push($tempitems, $new); // On ajoute le nouveau (pour rester à 3 items)
+                if($new !== null){ // Si l'objet courant est moins cher que les 3 actuels du tableau, on ignore
+                    array_push($tempitems, $new); // On ajoute le nouveau (pour rester à 3 items) 
+                }
             }else{
                 array_push($tempitems,$item); // On push les 3 premiers items
             }
