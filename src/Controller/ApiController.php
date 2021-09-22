@@ -183,11 +183,73 @@ class ApiController extends AbstractController
             ];
             array_push($items,$texts);
         }
+        asort($items);
+        dd($items);
+        return $this->render('dragon/allitems.html.twig', [
+            'items' => $items
+        ]);
+    }
+
+    /**
+     * @Route("/dragon/item/expensives", name="data_item_expensives")
+     */
+    public function dataItemExpensives($id = 0, UserRepository $api){
+        $result = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/item.json');
+        $json = json_decode($result, true);
+        $tempitems = [];
+        foreach($json['data'] as $item){
+            $cheapiest = 0;
+            $firstrow = true;
+            $new = null;
+            //$json['data']['clé']['gold']['total']
+            if(count($tempitems) >= 3){ // Si notre tableau a au moins 3 items on peut commencer à comparer lequel des 3 est le moins cher et donc à remplacer par le prochain item bouclé
+                foreach($tempitems as $key => $tempitem){ // Pour chacun des 3 items...
+                    if($firstrow){
+                        // Bouléen pour vérifier si on est au premier item comparé (cheapiest = 0)
+                        $firstrow = false; // On est plus au premier donc on met false
+                        $cheapiest = $tempitem['gold']['total']; // On remplace 0 par le prix de l'item
+                        $cheapiestKey = $key; // On stock la clé de l'item
+                    }
+                    $newPrice = $tempitem['gold']['total'];
+                    // Pour plus de lisibilité on stock dans $newPrice
+                    if($cheapiest > $newPrice){ // On compare si $newPrice est moins cher que $cheapiest
+                        $cheapiest = $newPrice; // On swap...
+                        $cheapiestKey = $key;
+                    }
+                    if($tempitem['gold']['total'] < $item['gold']['total']){
+                        $new = $item; // Futur item plus cher
+                    }
+                    //dump($cheapiest);
+                    //dump($expensive);
+                }
+                unset($tempitems[$cheapiestKey]); // On dégage le cheapiest
+                array_push($tempitems, $new); // On ajoute le nouveau (pour rester à 3 items)
+            }else{
+                array_push($tempitems,$item); // On push les 3 premiers items
+            }
+        }
+        // we can't sort by most valuable, because we have only objects
+        dd($tempitems);
         return $this->render('dragon/allitems.html.twig', [
             'items' => $items
         ]);
     }
 }
+
+// get gold from the item
+// Check if array already have 3 items into the temporary array
+// if >= 3
+// Check gold and pop the cheapiest one
+// then
+// push it into the temporary array
+
+/*gold_item6 = 550
+check si 550 est supérieur à l un des trois golds déjà dans le tableau
+SI OUI, on place item4 au bon endroit
+SINON on ignore
+[550, 500, 700]
+arsort 700 550 500
+*/
 
 // 22/09
 // 1°) Parcourir le fichier https://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/item.json
