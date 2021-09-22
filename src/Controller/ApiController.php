@@ -242,17 +242,28 @@ class ApiController extends AbstractController
      */
     public function dataItemBuild($id = 0, UserRepository $api){
         $result = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/item.json');
+        $staticUrl = "https://opgg-static.akamaized.net/images/lol/item/";
         $json = json_decode($result, true);
-        $itemUsed = $json['data'][4403]; // Stat-Stick of Stoicism
+        $id = 4403;
+        $itemUsed = $json['data'][$id]; // Stat-Stick of Stoicism
+        $finalItem = [
+                "name" => $itemUsed['name'],
+                "description" => $itemUsed['plaintext'],
+                "price" => $itemUsed['gold']['total'],
+                "image" => $staticUrl.$id.".png"
+            ];
         $items = [];
         foreach($itemUsed['from'] as $key => $itemId){ // 'into' => est utilisé pour... 'from' => est construit à partir...
             array_push($items, [
                 "name" => $json['data'][$itemId]['name'],
-                "description" => $json['data'][$itemId]['plaintext']
+                "description" => $json['data'][$itemId]['plaintext'],
+                "price" => $json['data'][$itemId]['gold']['total'],
+                "image" => $staticUrl.$itemId.".png"
             ]);
         }
-        return $this->render('dragon/allitems.html.twig', [
-            'items' => $items
+        return $this->render('dragon/build.html.twig', [
+            'items' => $items,
+            'finalItem' => $finalItem
         ]);
     }
 }
