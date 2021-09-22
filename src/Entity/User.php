@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
+use JsonSerializable;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
  */
-class User
+class User implements JsonSerializable
 {
     /**
      * @ORM\Id
@@ -88,5 +89,19 @@ class User
         $this->Lane = $Lane;
 
         return $this;
+    }
+
+    // L'interface demande à avoir la méthode jsonSerialize() qui va proprement
+    // linéariser votre entité pour retourner sous forme de JsonResponse
+    // Il suffit de return un tableau avec les champs à serialize et c'est ok
+    // Tout champ manquant ici ne sera pas retourné au front
+    public function jsonSerialize(){
+        return array(
+                'id' => $this->id,
+                'GameId' => $this->GameId,
+                'Role' => $this->Role,
+                'Lane' => $this->Lane,
+                'Username' => $this->Username,
+            );
     }
 }

@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ApiController extends AbstractController
 {
@@ -16,6 +17,11 @@ class ApiController extends AbstractController
 	protected $region = "euw1/";
 	protected $who = "passerelle/";
 	protected $endpoint = "getHistoryMatchList/";
+    protected $errors = [
+        404 => "Not found in DB",
+        403 => "Forbidden",
+    ];
+
     /**
      * @Route("/fetchapi", name="fetchapi")
      */
@@ -136,11 +142,73 @@ class ApiController extends AbstractController
         //     $message = $e->getMessage();
         // }
 
-        return $this->render('api/index.html.twig', [
+        return $this->render('api/error.html.twig', [
             'controller_name' => 'ApiController',
             'message' => $message,
             'alert' => $code,
             'user' => $user
         ]);
     }
+
+    /**
+     * @Route("/api/match/{id}", name="api_get_match")
+     */
+    public function getMatch($id = 0, UserRepository $api){
+        $result = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/champion.json');
+        dd(json_decode($result));
+        // $result = $api->findOneBy(['id' => $id]);
+        // if(!$result){
+        //     $code = 403;
+        //     $result = $this->errors[$code];
+        // }else{
+        //     $code = 200;
+        // }
+        // $response = array('code' => $code, 'result' => $result);
+        // return new JsonResponse($response, $code);
+    }
+
+    /**
+     * @Route("/dragon/item/all", name="data_item_all")
+     */
+    public function dataItemAll($id = 0, UserRepository $api){
+        $result = file_get_contents('http://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/item.json');
+        $json = json_decode($result, true);
+        $items = [];
+        foreach($json['data'] as $item){
+            $name = $item['name'];
+            $description = $item['plaintext'];
+            $texts = [
+                "name" => $name,
+                "description" => $description
+            ];
+            array_push($items,$texts);
+        }
+        return $this->render('dragon/allitems.html.twig', [
+            'items' => $items
+        ]);
+    }
 }
+
+// 22/09
+// 1°) Parcourir le fichier https://ddragon.leagueoflegends.com/cdn/9.3.1/data/en_US/item.json
+// --- file_get_contents puis un json_decode et vous avez un tableau PHP dans lequel vous pouvez boucler !
+// 2°) Récupérer pour CHAQUE item, le "name" et le "plaintext", et affichez ça dans un front twig, un item par ligne.
+
+// 3°) - challengeant
+// Dans le fichier d'items du 1°), récupérer les 3 items les plus cher du jeu (clé "total")
+// 4°) - challengeant
+// Trouver la liste des items qui nécessitent la "long sword" (1036), la clé c'est "into", et les champs a afficher pour chaque item sont : le "name" et le "plaintext"
+
+// 21/09
+// part 1
+// 1° Get champion ID from historyMatchList/azerty
+// 2° Get detail match by ID from historyMatch/{ID DU MATCH}
+// 3° Loop into "participants" from match details to find the participant with champion ID (1°)
+// --- for each item into the loop, stock the current participant object into variable
+// --- when championId match the key championId into the current participant object, break the loop
+// 4° show dates, victory or not, gameMode & champion name + image
+
+// part 2
+// 5° find the champion into the data dragon champion JSON file by championID
+// --- go to the participantIdentities key from historyMatch API URL to get the participant full identity
+// 6° show image + summonerName of all 10 participants
