@@ -8,6 +8,36 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AlgoController extends AbstractController
 {
+
+    /**
+     * @Route("/merge_sort", name="merge_sort")
+     */
+    public function merge_sort(){
+        $array = [3,4,6,2,5,1,8,7];
+        $array = $this->fusion($array);
+
+            // echo "<pre>";
+            // print_r($right);
+            // echo "</pre>";
+       return $this->render('algo/plusoumoins.html.twig', [
+        'controller_name' => 'AlgoController'
+]);
+    }
+
+    protected function fusion($tab){ // [6, 2]
+        $left = array_slice($tab, 0, floor(count($tab) / 2)); // [6]
+        $right = array_slice($tab, floor(count($tab) / 2)); // [2]
+        if(count($tab) > 2){
+            $this->fusion($left);
+            $this->fusion($right);
+        }else{
+            if($left[0] > $right[0]){
+                $tab = array_merge($right, $left);
+            }
+            return $tab;
+        }
+    }
+
     /** 
      * @Route("/algo_plusoumoins", name="algo_plusoumoins")
      */
@@ -15,24 +45,52 @@ class AlgoController extends AbstractController
     {
         $msg = "";
         if(isset($_GET['valeur'])){
-            $user_input = (int)$_GET['valeur'];
-            
-            $random = 33;
+            $to_find = (int)$_GET['valeur'];
             $min = 0;
-            $max = 100;
+            $max = 10000;
+            $median = 0;
+            $count = 0;
+            $countfor = 0;
 
-            if($random === $random){
-                // trouvé
-                $msg = "Trouvé";
-            }elseif($random < $random){
-                // C'est plus
-                $msg = "C'est plus !";
-            }elseif($random > $random){
-                // C'est moins
-                $msg = "C'est moins !";
-            }else{
-                // NOTHING
+            $time_start = microtime(true);
+            for($i = $min; $i <= $max; $i++){
+                $countfor++;
+                if($i === $to_find){
+                    break;
+                }
             }
+            echo "Linear search : Trouvé en ".$countfor." tour(s) !<br><br>";
+            
+            $time_end = microtime(true);
+            $execution_time = ($time_end - $time_start)/60;
+            echo '<b>Linear search : Total Execution Time:</b> '.number_format($execution_time, 10).' Mins';
+
+            $time_start = microtime(true);
+            while($to_find !== $median){ // tant que le nb à trouver est différent de médian...
+                $count++;
+                // Calcul du médian a chaque tour
+                $median = (int) floor(($min + $max) / 2);
+                if($to_find === $median){
+                    // trouvé
+                    $msg = "Binary search : Trouvé en ".$count." tour(s) !";
+                }elseif($to_find < $median){
+                    // C'est moins
+                    $msg = "C'est moins !";
+                    $max = $median;
+                }elseif($to_find > $median){
+                    // C'est plus
+                    $msg = "C'est plus !";
+                    $min = $median;
+                }else{
+                    // NOTHING
+                }
+            }
+            $time_end = microtime(true);
+            $execution_time = ($time_end - $time_start)/60;
+            echo '<br><br><b>Binary search : Total Execution Time:</b> '.number_format($execution_time, 10).' Mins';
+
+
+            
 
         }
 
